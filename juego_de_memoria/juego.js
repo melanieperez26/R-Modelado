@@ -26,6 +26,7 @@ let cuentaAtras = null;
 let tiempoLimite = 60;
 let mejorTiempo = localStorage.getItem('mejorTiempo');
 let nombreJugador = "";
+let juegoTerminado = false; 
 
 function mostrarRecord() {
     if (mejorTiempo) {
@@ -41,28 +42,41 @@ function formatoTiempo(segundos) {
     return `${min}:${sec}`;
 }
 
+let restante = tiempoLimite;
+
 function iniciarTemporizador() {
     tiempo = 0;
+    restante = tiempoLimite;
     tiempoDiv.textContent = "Tiempo usado: 00:00";
     tiempoRestanteDiv.textContent = `Tiempo restante: ${tiempoLimite}s`;
 
+    console.log("🕒 Iniciando temporizador...");
+    
     intervalo = setInterval(() => {
         tiempo++;
         tiempoDiv.textContent = `Tiempo usado: ${formatoTiempo(tiempo)}`;
     }, 1000);
 
-    let restante = tiempoLimite;
+    
     cuentaAtras = setInterval(() => {
+        if (juegoTerminado) return;
+
         restante--;
         tiempoRestanteDiv.textContent = `Tiempo restante: ${restante}s`;
 
-        if (restante <= 0) perder();
+        if (restante <= 0) {
+            detenerTemporizador(); // <- Asegúrate de detener aquí también
+            perder();
+        }
     }, 1000);
 }
 
 function detenerTemporizador() {
+    console.log("⛔ Deteniendo temporizadores...");
     clearInterval(intervalo);
     clearInterval(cuentaAtras);
+    intervalo = null;
+    cuentaAtras = null;
 }
 
 function mostrarModal() {
@@ -74,7 +88,9 @@ function ocultarModal() {
 }
 
 function ganar() {
+    if (juegoTerminado) return;
     detenerTemporizador();
+    juegoTerminado = true;
     mensajeFinal.classList.remove('oculto');
     mostrarModal();
 
@@ -87,15 +103,24 @@ function ganar() {
 }
 
 function perder() {
-    detenerTemporizador();
+    console.log("💥 Perdiste");
+    detenerTemporizador(); // ⬅️ Mueve esto primero
+
+    if (juegoTerminado) return; // ← evita doble ejecución
+    juegoTerminado = true;
+
     tablero.innerHTML = "";
     mensajePerdiste.classList.remove("oculto");
     mostrarModal();
 }
 
 function crearTablero() {
-    detenerTemporizador();
+    console.log("🔁 Reiniciando juego y creando tablero...");
+    detenerTemporizador();  // <- Asegúrate de detener aquí también
 
+    juegoTerminado = false; // ← Reinicia bandera
+
+    tiempo = 0; 
     tablero.innerHTML = "";
     cartasVolteadas = [];
     cartasCompletadas = 0;
@@ -128,7 +153,9 @@ function crearTablero() {
     }, 2000);
 }
 
+
 function voltearCarta(e) {
+    if (juegoTerminado) return;
     const carta = e.target;
     if (carta.classList.contains("volteada") || cartasVolteadas.length >= 2) return;
 
@@ -142,6 +169,8 @@ function voltearCarta(e) {
 }
 
 function verificarCoincidencia() {
+    if (juegoTerminado) return; // 👈 PROTECCIÓN
+
     const [c1, c2] = cartasVolteadas;
 
     if (c1.dataset.simbolo === c2.dataset.simbolo) {
@@ -158,6 +187,7 @@ function verificarCoincidencia() {
 
     cartasVolteadas = [];
 }
+
 
 btnIniciar.addEventListener("click", () => {
     nombreJugador = nombreInput.value.trim();
