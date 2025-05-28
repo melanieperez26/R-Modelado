@@ -76,6 +76,13 @@
             margin-top: 20px;
         }
 
+        #nuevoRecord {
+            font-size: 28px;
+            color: #2e7d32;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
         .oculto {
             display: none;
         }
@@ -113,6 +120,10 @@
             <p>¡Ganaste! 🎉</p>
         </div>
 
+        <div id="nuevoRecord" class="oculto">
+            <p>🏆 ¡Nuevo récord!</p>
+        </div>
+
         <div id="mensajePerdiste" class="oculto">
             <h3>⏰ Tiempo agotado. ¡Intenta de nuevo!</h3>
         </div>
@@ -141,6 +152,8 @@
         let tiempoLimite = 60;
         let mejorTiempo = localStorage.getItem('mejorTiempo');
         let nombreJugador = "";
+        let juegoTerminado = false;
+
 
         function mostrarRecord() {
             if (mejorTiempo) {
@@ -168,6 +181,8 @@
 
             let restante = tiempoLimite;
             cuentaAtras = setInterval(() => {
+                if (juegoTerminado) return; // ← No hacer nada si el juego ya terminó
+
                 restante--;
                 tiempoRestanteDiv.textContent = `Tiempo restante: ${restante}s`;
 
@@ -175,6 +190,7 @@
                     perder();
                 }
             }, 1000);
+
         }
 
         function detenerTemporizador() {
@@ -182,20 +198,55 @@
             clearInterval(cuentaAtras);
         }
 
+        function ganar() {
+            if (juegoTerminado) return;
+            juegoTerminado = true;
+            detenerTemporizador();
+            mensajeFinal.classList.remove("oculto");
+
+            // VERIFICAR SI ES NUEVO RÉCORD
+            if (!mejorTiempo || tiempo < mejorTiempo) {
+                mejorTiempo = tiempo;
+                localStorage.setItem("mejorTiempo", mejorTiempo);
+                console.log("tiempo actual:", tiempo);
+                console.log("mejorTiempo guardado:", mejorTiempo);
+                console.log("¿Es nuevo récord?", !mejorTiempo || tiempo < mejorTiempo);
+
+                console.log("¡Nuevo récord!", mejorTiempo); // DEBUG
+                document.getElementById("nuevoRecord").classList.remove("oculto");
+            }
+
+            mostrarRecord();
+        }
+
+
+
         function perder() {
+            if (juegoTerminado) return; // ← evita doble ejecución
+            juegoTerminado = true;
+
             detenerTemporizador();
             tablero.innerHTML = "";
             mensajePerdiste.classList.remove("oculto");
+            mostrarModal();
         }
 
+
         function crearTablero() {
+            console.log("🔁 Reiniciando juego y creando tablero...");
+            detenerTemporizador();  // <- Asegúrate de detener aquí también
+
+            juegoTerminado = false; // ← Reinicia bandera
+
+            tiempo = 0; 
             tablero.innerHTML = "";
             cartasVolteadas = [];
             cartasCompletadas = 0;
             mensajeFinal.classList.add("oculto");
             mensajePerdiste.classList.add("oculto");
+            document.getElementById("nuevoRecord").classList.add("oculto");
 
-            let simbolosMezclados = simbolos.sort(() => 0.5 - Math.random());
+            let simbolosMezclados = [...simbolos].sort(() => 0.5 - Math.random());
 
             simbolosMezclados.forEach(simbolo => {
                 const carta = document.createElement("div");
@@ -221,7 +272,11 @@
             }, 2000);
         }
 
+
+
         function voltearCarta(e) {
+            if (juegoTerminado) return; // ← Detiene si ya ganó o perdió
+
             const carta = e.target;
             if (carta.classList.contains("volteada") || cartasVolteadas.length >= 2) return;
 
@@ -234,21 +289,16 @@
             }
         }
 
+
         function verificarCoincidencia() {
+            if (juegoTerminado) return; // 👈 PROTECCIÓN
+
             const [c1, c2] = cartasVolteadas;
 
             if (c1.dataset.simbolo === c2.dataset.simbolo) {
                 cartasCompletadas += 2;
                 if (cartasCompletadas === simbolos.length) {
-                    detenerTemporizador();
-                    mensajeFinal.classList.remove("oculto");
-
-                    if (!mejorTiempo || tiempo < mejorTiempo) {
-                        mejorTiempo = tiempo;
-                        localStorage.setItem('mejorTiempo', mejorTiempo);
-                        alert("¡Nuevo récord!");
-                        mostrarRecord();
-                    }
+                    ganar();
                 }
             } else {
                 c1.textContent = "";
@@ -259,6 +309,7 @@
 
             cartasVolteadas = [];
         }
+
 
         btnIniciar.addEventListener("click", () => {
             nombreJugador = nombreInput.value.trim();
