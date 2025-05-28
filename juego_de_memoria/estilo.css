@@ -6,7 +6,9 @@ body {
     padding: 0;
 }
 
-h1 {
+h1,
+h2,
+h3 {
     margin-top: 20px;
     color: #4a0072;
 }
@@ -68,4 +70,10 @@ button:hover {
 
 .oculto {
     display: none;
+}
+
+#mensajePerdiste {
+    font-size: 24px;
+    color: #c62828;
+    font-weight: bold;
 }

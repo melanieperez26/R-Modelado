@@ -14,7 +14,9 @@
             padding: 0;
         }
 
-        h1 {
+        h1,
+        h2,
+        h3 {
             margin-top: 20px;
             color: #4a0072;
         }
@@ -77,56 +79,150 @@
         .oculto {
             display: none;
         }
+
+        #mensajePerdiste {
+            font-size: 24px;
+            color: #c62828;
+            font-weight: bold;
+        }
     </style>
 </head>
 
 <body>
+
     <h1>🧠 Juego de Memoria</h1>
 
-    <div class="panel">
-        <p>Intentos: <span id="intentos">0</span></p>
-        <button id="reiniciar">🔄 Reiniciar</button>
+    <div id="pantallaInicio">
+        <h2>Bienvenido al Juego de Memoria</h2>
+        <label for="nombreJugador">Ingresa tu nombre:</label><br />
+        <input type="text" id="nombreJugador" placeholder="Tu nombre aquí" /><br /><br />
+        <button id="btnIniciar">Iniciar Juego</button>
     </div>
 
-    <div class="tablero" id="tablero"></div>
+    <div id="juego" style="display: none;">
+        <div class="panel">
+            <p id="tiempoRestante">Tiempo restante: 60s</p>
+            <p id="record">Récord: --:--</p>
+            <p id="tiempo">Tiempo usado: 00:00</p>
+            <button id="reiniciar">🔄 Reiniciar</button>
+        </div>
 
-    <div id="mensajeFinal" class="oculto">🎉 ¡Ganaste!</div>
+        <div class="tablero" id="tablero"></div>
+
+        <div id="mensajeFinal" class="oculto">
+            <p>¡Ganaste! 🎉</p>
+        </div>
+
+        <div id="mensajePerdiste" class="oculto">
+            <h3>⏰ Tiempo agotado. ¡Intenta de nuevo!</h3>
+        </div>
+    </div>
 
     <script>
+        const btnIniciar = document.getElementById("btnIniciar");
+        const pantallaInicio = document.getElementById("pantallaInicio");
+        const juego = document.getElementById("juego");
         const tablero = document.getElementById("tablero");
         const mensajeFinal = document.getElementById("mensajeFinal");
+        const mensajePerdiste = document.getElementById("mensajePerdiste");
         const reiniciarBtn = document.getElementById("reiniciar");
-        const intentosDisplay = document.getElementById("intentos");
+        const recordDiv = document.getElementById("record");
+        const tiempoDiv = document.getElementById("tiempo");
+        const tiempoRestanteDiv = document.getElementById("tiempoRestante");
+        const nombreInput = document.getElementById("nombreJugador");
 
-        let intentos = 0;
         let cartasVolteadas = [];
         let cartasCompletadas = 0;
         let simbolos = ['🍎', '🍌', '🍇', '🍒', '🍉', '🍍', '🥝', '🍓'];
         simbolos = [...simbolos, ...simbolos];
+        let tiempo = 0;
+        let intervalo = null;
+        let cuentaAtras = null;
+        let tiempoLimite = 60;
+        let mejorTiempo = localStorage.getItem('mejorTiempo');
+        let nombreJugador = "";
+
+        function mostrarRecord() {
+            if (mejorTiempo) {
+                recordDiv.textContent = `Récord: ${formatoTiempo(mejorTiempo)}`;
+            } else {
+                recordDiv.textContent = "Récord: --:--";
+            }
+        }
+
+        function formatoTiempo(segundos) {
+            const min = String(Math.floor(segundos / 60)).padStart(2, '0');
+            const sec = String(segundos % 60).padStart(2, '0');
+            return `${min}:${sec}`;
+        }
+
+        function iniciarTemporizador() {
+            tiempo = 0;
+            tiempoDiv.textContent = "Tiempo usado: 00:00";
+            tiempoRestanteDiv.textContent = `Tiempo restante: ${tiempoLimite}s`;
+
+            intervalo = setInterval(() => {
+                tiempo++;
+                tiempoDiv.textContent = `Tiempo usado: ${formatoTiempo(tiempo)}`;
+            }, 1000);
+
+            let restante = tiempoLimite;
+            cuentaAtras = setInterval(() => {
+                restante--;
+                tiempoRestanteDiv.textContent = `Tiempo restante: ${restante}s`;
+
+                if (restante <= 0) {
+                    perder();
+                }
+            }, 1000);
+        }
+
+        function detenerTemporizador() {
+            clearInterval(intervalo);
+            clearInterval(cuentaAtras);
+        }
+
+        function perder() {
+            detenerTemporizador();
+            tablero.innerHTML = "";
+            mensajePerdiste.classList.remove("oculto");
+        }
 
         function crearTablero() {
             tablero.innerHTML = "";
-            mensajeFinal.classList.add("oculto");
             cartasVolteadas = [];
             cartasCompletadas = 0;
-            intentos = 0;
-            intentosDisplay.textContent = intentos;
+            mensajeFinal.classList.add("oculto");
+            mensajePerdiste.classList.add("oculto");
 
             let simbolosMezclados = simbolos.sort(() => 0.5 - Math.random());
 
-            simbolosMezclados.forEach((simbolo, index) => {
+            simbolosMezclados.forEach(simbolo => {
                 const carta = document.createElement("div");
                 carta.classList.add("carta");
                 carta.dataset.simbolo = simbolo;
-                carta.dataset.index = index;
+                carta.textContent = "";
                 carta.addEventListener("click", voltearCarta);
                 tablero.appendChild(carta);
             });
+
+            const cartas = document.querySelectorAll(".carta");
+            cartas.forEach(carta => {
+                carta.textContent = carta.dataset.simbolo;
+                carta.classList.add("volteada");
+            });
+
+            setTimeout(() => {
+                cartas.forEach(carta => {
+                    carta.textContent = "";
+                    carta.classList.remove("volteada");
+                });
+                iniciarTemporizador();
+            }, 2000);
         }
 
         function voltearCarta(e) {
             const carta = e.target;
-
             if (carta.classList.contains("volteada") || cartasVolteadas.length >= 2) return;
 
             carta.textContent = carta.dataset.simbolo;
@@ -134,9 +230,7 @@
             cartasVolteadas.push(carta);
 
             if (cartasVolteadas.length === 2) {
-                intentos++;
-                intentosDisplay.textContent = intentos;
-                setTimeout(verificarCoincidencia, 700);
+                setTimeout(verificarCoincidencia, 800);
             }
         }
 
@@ -146,7 +240,15 @@
             if (c1.dataset.simbolo === c2.dataset.simbolo) {
                 cartasCompletadas += 2;
                 if (cartasCompletadas === simbolos.length) {
+                    detenerTemporizador();
                     mensajeFinal.classList.remove("oculto");
+
+                    if (!mejorTiempo || tiempo < mejorTiempo) {
+                        mejorTiempo = tiempo;
+                        localStorage.setItem('mejorTiempo', mejorTiempo);
+                        alert("¡Nuevo récord!");
+                        mostrarRecord();
+                    }
                 }
             } else {
                 c1.textContent = "";
@@ -158,10 +260,21 @@
             cartasVolteadas = [];
         }
 
-        reiniciarBtn.addEventListener("click", crearTablero);
+        btnIniciar.addEventListener("click", () => {
+            nombreJugador = nombreInput.value.trim();
+            if (nombreJugador === "") {
+                alert("Por favor, ingresa tu nombre para empezar.");
+                return;
+            }
+            pantallaInicio.style.display = "none";
+            juego.style.display = "block";
+            crearTablero();
+            mostrarRecord();
+        });
 
-        // Iniciar juego al cargar
-        crearTablero();
+        reiniciarBtn.addEventListener("click", () => {
+            crearTablero();
+        });
     </script>
 </body>
 
