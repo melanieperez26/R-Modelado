@@ -22,7 +22,7 @@ const btnIniciar = document.getElementById("btnIniciar");
         let intervalo = null;
         let cuentaAtras = null;
         let tiempoLimite = 60;
-        let mejorTiempo = localStorage.getItem('mejorTiempo');
+        let mejorTiempo = null;
         let nombreJugador = "";
         let juegoTerminado = false;
 
@@ -187,7 +187,7 @@ const btnIniciar = document.getElementById("btnIniciar");
         }
 
 
-        btnIniciar.addEventListener("click", () => {
+        btnIniciar.addEventListener("click", async () => {
             nombreJugador = nombreInput.value.trim();
             if (nombreJugador === "") {
                 alert("Por favor, ingresa tu nombre para empezar.");
@@ -195,6 +195,7 @@ const btnIniciar = document.getElementById("btnIniciar");
             }
             pantallaInicio.style.display = "none";
             juego.style.display = "block";
+            await obtenerRecordDesdeBackend(nombreJugador); 
             crearTablero();
             mostrarRecord();
         });
@@ -215,5 +216,26 @@ const btnIniciar = document.getElementById("btnIniciar");
                 console.log('Puntaje guardado en Supabase:', data);
             }
         }
+
+        async function obtenerRecordDesdeBackend(nombre) {
+            const { data, error } = await supabase
+                .from('scores')
+                .select('score')
+                .eq('name', nombre)
+                .order('score', { ascending: true }) // menor tiempo = mejor
+                .limit(1);
+
+            if (error) {
+                console.error('Error obteniendo récord:', error);
+                return;
+            }
+
+            if (data.length > 0) {
+                mejorTiempo = data[0].score;
+            }
+
+            mostrarRecord();
+        }
+
 
 
