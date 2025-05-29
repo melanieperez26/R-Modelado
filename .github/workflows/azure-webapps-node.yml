@@ -45,7 +45,6 @@ jobs:
     - name: npm install and build
       run: |
         ls
-        cd memoria_backend
         npm install
         npm run build --if-present
       working-directory: ./memoria_backend
