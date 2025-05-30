@@ -145,7 +145,7 @@ const btnIniciar = document.getElementById("btnIniciar");
                     carta.classList.remove("volteada");
                 });
                 iniciarTemporizador();
-            }, 2000);
+            }, 5000);
         }
 
 
