@@ -8,11 +8,6 @@ const path = require('path')
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(express.static(__dirname));
-
-// Sirve los archivos estáticos
-app.use(express.static(frontendPath));
-
 app.use(cors());
 app.use(express.json());
 
