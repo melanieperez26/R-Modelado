@@ -33,4 +33,4 @@ app.get('/api/highscores', async (req, res) => {
   res.json(top);
 });
 
-app.listen(3000, () => console.log('Servidor corriendo en http://localhost:3000'));
+app.listen(3000, () => console.log('Servidor corriendo en el puerto ${port}'));
