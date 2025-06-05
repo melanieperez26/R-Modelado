@@ -7,7 +7,11 @@ require('dotenv').config();
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(express.static(path.join(__dirname, 'juego_de_memoria')));
+const frontendPath = path.join(__dirname, 'memoria_backend', 'juego_de_memoria');
+
+// Sirve los archivos estáticos
+app.use(express.static(frontendPath));
+
 app.use(cors());
 app.use(express.json());
 
@@ -32,6 +36,10 @@ app.get('/api/highscores', async (req, res) => {
     take: 10
   });
   res.json(top);
+});
+
+app.get('/ping', (req, res) => {
+  res.send('pong');
 });
 
 const PORT = process.env.PORT || 8080;
