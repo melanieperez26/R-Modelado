@@ -8,7 +8,7 @@ const path = require('path')
 const prisma = new PrismaClient();
 const app = express();
 
-const frontendPath = path.join(__dirname, 'memoria_backend', 'juego_de_memoria');
+app.use(express.static(__dirname));
 
 // Sirve los archivos estáticos
 app.use(express.static(frontendPath));
