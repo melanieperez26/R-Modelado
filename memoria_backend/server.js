@@ -11,6 +11,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+app.get('/', (req, res) => {
+  res.send('Servidor funcionando correctamente');
+});
+
 // Guardar nuevo usuario y puntaje
 app.post('/api/score', async (req, res) => {
   const { name, score } = req.body;

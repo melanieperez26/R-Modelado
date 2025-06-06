@@ -1,22 +1,29 @@
 {
-  "name": "memoria_backend",
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "ac_modelado",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "prisma:generate": "prisma generate",
-    "start": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/melanieperez26/R-Modelado.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/melanieperez26/R-Modelado/issues"
+  },
+  "homepage": "https://github.com/melanieperez26/R-Modelado#readme",
+  "devDependencies": {
+    "prisma": "^5.10.0"
+  },
   "dependencies": {
-    "@prisma/client": "^6.8.2",
-    "@supabase/supabase-js": "^2.49.8",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "prisma": "^6.8.2"
+    "express": "^4.18.2"
   }
 }
